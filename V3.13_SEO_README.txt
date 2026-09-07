@@ -1,0 +1,22 @@
+NordHome v3.13 — SEO
+
+Що додано:
+- SEO title і description для головної сторінки через Адмінка → Налаштування.
+- Публічна адреса сайту для canonical і sitemap.xml.
+- SEO slug, title і description для кожного товару в редакторі товару.
+- Красиві URL товарів /product/<slug> з підтримкою старих /product/<id>.
+- Динамічні title, meta description, canonical, Open Graph і Twitter Card.
+- robots meta: приватні сторінки checkout/account/admin/cart та інші не індексуються.
+- Динамічні /robots.txt і /sitemap.xml.
+- sitemap містить основні сторінки, категорії та активні товари.
+
+ВАЖЛИВО: у v3.13 є нові поля в таблиці products. Один раз виконайте:
+  npm run db:setup
+
+Після цього:
+  npm install
+  npm run dev
+
+Поки домену немає, поле «Публічна адреса сайту» можна залишити порожнім. Після запуску в інтернеті вкажіть повний URL, наприклад https://shop.example.com
+
+Для старих товарів міграція створює безпечні slug product-1, product-2 тощо. Їх можна змінити в Адмінка → Товари → Редагувати → SEO товару.

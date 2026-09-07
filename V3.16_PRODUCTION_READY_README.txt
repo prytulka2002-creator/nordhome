@@ -1,0 +1,31 @@
+NordHome v3.16 — Production Ready
+
+Що додано:
+- production server binds to HOST=0.0.0.0 and respects hosting PORT;
+- npm start serves API + built React dist from one Node process;
+- /api/health returns safe health data for hosting health checks;
+- HSTS is enabled in NODE_ENV=production (behind HTTPS hosting/proxy);
+- npm run prod:check validates required production environment variables;
+- PUBLIC_URL must be real HTTPS URL before public launch;
+- no secrets are bundled into the ZIP.
+
+Локальна перевірка:
+  npm install
+  npm run build
+  npm start
+
+На хостингу:
+  Build command: npm install && npm run build
+  Start command: npm start
+  Health check path: /api/health
+  NODE_ENV=production
+  HOST=0.0.0.0
+  PORT is normally supplied by the host
+
+Required production ENV:
+  DATABASE_URL
+  ADMIN_USERNAME
+  ADMIN_PASSWORD_HASH
+  PUBLIC_URL=https://your-domain.example
+
+Copy the remaining service credentials from your local persistent config into the hosting ENV dashboard manually. Never commit .env.

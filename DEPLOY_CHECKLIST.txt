@@ -1,0 +1,19 @@
+NORDHOME DEPLOY CHECKLIST
+
+[ ] npm install
+[ ] npm run build
+[ ] npm run prod:check (after production ENV is configured)
+[ ] DATABASE_URL configured on host
+[ ] ADMIN_USERNAME + ADMIN_PASSWORD_HASH configured on host
+[ ] PUBLIC_URL uses https://
+[ ] Nova Poshta credentials configured
+[ ] Telegram credentials configured (if used)
+[ ] Email SMTP credentials configured (if used)
+[ ] Build command: npm install && npm run build
+[ ] Start command: npm start
+[ ] Health check: /api/health
+[ ] Open storefront and /admin
+[ ] Place a test order
+[ ] Verify email/Telegram/status notifications
+[ ] Set public URL in Admin settings
+[ ] Add GA4 / Meta Pixel IDs after public URL exists

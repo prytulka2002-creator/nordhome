@@ -1,0 +1,11 @@
+NordHome v3.14 — Analytics
+
+Додано:
+- Google Analytics 4 через Measurement ID (G-...)
+- Meta Pixel через Pixel ID
+- Налаштування в Адмінка → Налаштування → Аналітика
+- Події: page_view, view_item-ready architecture, add_to_cart, begin_checkout, purchase
+- Якщо ID порожні, зовнішні скрипти не завантажуються.
+- Дані зберігаються у store_settings, міграція БД не потрібна.
+
+Перед реальним запуском перевірте вимоги до cookies/згоди користувача для вашого бізнесу та юрисдикції.

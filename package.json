@@ -1,0 +1,30 @@
+{
+  "name": "nordhome-react",
+  "version": "3.16.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.js",
+    "build": "vite build",
+    "start": "node server.js",
+    "preview": "vite preview",
+    "db:setup": "node setup-db.js",
+    "config:save": "node save-settings.js",
+    "config:check": "node config-check.js",
+    "email:setup": "node setup-email.js",
+    "admin:setup": "node setup-admin.js",
+    "security:check": "node security-check.js",
+    "prod:check": "node production-check.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest",
+    "ua-geo-set": "1.0.4",
+    "pg": "8.16.3",
+    "nodemailer": "7.0.6"
+  },
+  "devDependencies": {}
+}

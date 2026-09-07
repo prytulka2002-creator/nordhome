@@ -1,0 +1,20 @@
+NordHome v3.15 — Security / production hardening
+
+Що додано:
+- пароль адміністратора зберігається як scrypt-хеш, не як відкритий текст;
+- npm run admin:setup мігрує конфіг на ADMIN_PASSWORD_HASH і очищає ADMIN_PASSWORD;
+- rate limit входу адміна: 7 невдалих спроб / 15 хв / IP;
+- загальний API rate limit: 180 запитів / хв / IP;
+- admin session token збільшений до 48 випадкових байтів, 12 годин;
+- HTTP security headers: CSP, frame protection, nosniff, referrer/permissions policy;
+- npm run security:check для перевірки продакшен-конфігурації.
+
+Після розпакування:
+1. npm install
+2. npm run admin:setup
+3. npm run security:check
+4. npm run dev
+
+База даних не змінюється, npm run db:setup не потрібен.
+
+Увага: якщо старий пароль адміна ще працював через ADMIN_PASSWORD, після admin:setup використовуйте новий пароль. Сам пароль ніде в коді/БД не зберігається.

@@ -1,0 +1,12 @@
+NordHome v3.10 — Legal Pages
+
+Added public pages:
+- /delivery — Доставка та оплата
+- /returns — Повернення та обмін
+- /offer — Публічна оферта
+- /privacy — Політика конфіденційності
+
+All four texts are editable in Admin → Налаштування → Юридичні сторінки and stored in store_settings JSONB.
+No database migration is required.
+
+Important: default legal text is placeholder guidance, not legal advice. Before production launch, adapt the texts to the actual seller and have them reviewed if necessary.
