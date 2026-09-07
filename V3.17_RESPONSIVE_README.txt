@@ -1,0 +1,17 @@
+NordHome v3.17 — Responsive storefront + admin
+
+Що змінилось:
+- Єдина адаптивна версія для desktop / tablet / phone.
+- Storefront: компактний mobile header, картки товарів, hero, каталог, product detail, cart, checkout, tracking, footer.
+- Mobile product cards більше не розтягуються на екран: фото 4:3, компактна кнопка Переглянути, обрізання довгого опису до 2 рядків.
+- Checkout на телефоні перебудовується в одну колонку, поля мають touch-friendly розмір.
+- Admin: responsive sidebar/navigation, dashboard cards, products, orders, tables, settings, modals/editors.
+- На desktop зберігається широка верстка; mobile правила вмикаються тільки breakpoint-ами.
+
+Deploy після заміни версії:
+1. npm install
+2. npm run build
+3. git add .
+4. git commit -m "NordHome v3.17 responsive"
+5. git push
+Render auto-deploys main branch.
