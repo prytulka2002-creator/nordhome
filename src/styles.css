@@ -359,3 +359,60 @@ img{max-width:100%}
   .admin-review-top{gap:8px}
   .admin-merch-box{padding:12px}
 }
+
+/* NordHome v3.18 — final mobile catalog + product gallery */
+@media (max-width:580px){
+  /* Catalog: compact two-column cards */
+  .catalog-product-grid,.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .product-card{border-radius:14px;min-width:0}
+  .product-card-media>img,.product-card img{aspect-ratio:4/3;object-fit:cover;display:block}
+  .product-card-body{padding:10px 10px 12px}
+  .product-card-body h3{font-size:15px;line-height:1.18;margin:4px 0 6px}
+  .product-card-body p{display:none}
+  .product-card-meta{font-size:9px}
+  .product-card-meta span{display:none}
+  .card-rating{font-size:10px;margin-bottom:5px}
+  .customer-stock-line{font-size:10px;gap:4px;margin-top:6px}
+  .customer-stock-line strong{display:none}
+  .product-card-bottom{margin-top:8px;align-items:end;gap:4px}
+  .product-card-bottom strong{font-size:15px;white-space:nowrap}
+  .product-card-bottom del{font-size:10px}
+  .product-card-bottom>span{display:none}
+  .product-card-media .product-stock-badge{bottom:8px;left:8px;font-size:8px;padding:5px 7px;max-width:calc(100% - 16px)}
+  .product-card-media .favorite-button{top:8px;right:8px;bottom:auto;width:32px;height:32px}
+  .product-card-media .product-view-button{display:none}
+  .product-badges{top:8px;left:8px;right:auto;max-width:55%}
+  .product-flag{font-size:7px;padding:5px 6px}
+
+  /* Product page: image uses the full phone width — no side gutters */
+  .product-page{width:calc(100% - 24px)}
+  .product-breadcrumb{font-size:11px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .product-detail{display:block}
+  .product-gallery{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+  .main-image-wrap{width:100%;overflow:hidden;border-radius:0}
+  .main-image{width:100%;aspect-ratio:4/3;border-radius:0;object-fit:cover;display:block}
+  .image-sku{left:12px;bottom:12px}
+  .thumbs{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:8px 12px 18px}
+  .thumbs img{aspect-ratio:4/3;border-radius:8px}
+  .product-info{padding-top:0}
+  .product-title-row h1,.product-info h1{font-size:28px;line-height:1.08}
+  .product-title-row{position:relative;padding-right:0}
+  .detail-favorite{padding:8px 10px;margin:8px 0 10px;width:max-content}
+  .detail-favorite span{font-size:12px}
+  .product-price-row{align-items:center;gap:10px;flex-wrap:wrap}
+  .big-price{font-size:24px}
+  .product-lead{font-size:14px;line-height:1.5}
+  .product-buy{min-height:48px}
+  .product-service{grid-template-columns:1fr 1fr;gap:8px}
+  .product-service>div{padding:10px}
+  .product-service strong{font-size:11px}
+  .product-service small{font-size:9px}
+  .reviews-section{margin:42px 0}
+}
+
+@media (max-width:370px){
+  .catalog-product-grid,.product-grid{gap:7px}
+  .product-card-body{padding:9px 8px 10px}
+  .product-card-body h3{font-size:14px}
+  .product-card-bottom strong{font-size:14px}
+}
