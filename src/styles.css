@@ -416,3 +416,29 @@ img{max-width:100%}
   .product-card-body h3{font-size:14px}
   .product-card-bottom strong{font-size:14px}
 }
+
+/* NordHome v3.19 — mobile grid overflow fix */
+@media (max-width:580px){
+  html,body,#root{max-width:100%;overflow-x:hidden}
+  .catalog-section{width:calc(100% - 24px);max-width:100%}
+  .catalog-layout,.catalog-results,.catalog-product-grid{min-width:0;width:100%;max-width:100%}
+  .catalog-layout{overflow:visible}
+  .catalog-results{overflow:visible}
+  .catalog-product-grid,.product-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .catalog-product-grid .product-card,.product-grid .product-card{width:100%;max-width:100%;min-width:0;overflow:hidden}
+  .catalog-product-grid .product-card-media,.product-grid .product-card-media{width:100%;min-width:0;overflow:hidden}
+  .catalog-product-grid .product-card-media>img,.product-grid .product-card-media>img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover}
+  .catalog-product-grid .product-card-body,.product-grid .product-card-body{min-width:0;overflow:hidden}
+  .catalog-product-grid .product-card-body h3,.product-grid .product-card-body h3{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .catalog-product-grid .card-price-stack,.product-grid .card-price-stack{min-width:0;gap:5px;flex-wrap:wrap}
+  .catalog-product-grid .card-price-stack strong,.product-grid .card-price-stack strong{font-size:14px;white-space:nowrap}
+  .catalog-product-grid .card-price-stack del,.product-grid .card-price-stack del{font-size:9px;white-space:nowrap}
+  .catalog-results-head{min-width:0;width:100%}
+  .mobile-category-chips{min-width:0;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+}
+@media (max-width:360px){
+  .catalog-product-grid,.product-grid{gap:6px}
+  .catalog-product-grid .product-card-body,.product-grid .product-card-body{padding:8px}
+  .catalog-product-grid .product-card-body h3,.product-grid .product-card-body h3{font-size:13px}
+  .catalog-product-grid .card-price-stack strong,.product-grid .card-price-stack strong{font-size:13px}
+}
