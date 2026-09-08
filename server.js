@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.23.0'
+const APP_VERSION = '3.24.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -701,11 +701,32 @@ async function adminUpdateAvailability(req,res,id){
   if(!requireAdmin(req,res))return
   try{const body=await readJsonBody(req);const mode=clean(body.availabilityMode,20);if(!['auto','preorder','out'].includes(mode))return json(res,400,{ok:false,error:'Некоректний статус наявності.'});const requested=clean(body.availability,160);const text=mode==='preorder'?(requested.toLowerCase().includes('під замовлення')?requested:'Під замовлення'):(mode==='out'?'Немає в наявності':'В наявності');const result=await query('UPDATE products SET availability_mode=$1,availability=$2,updated_at=NOW() WHERE id=$3 RETURNING *',[mode,text,id]);if(!result.rowCount)return json(res,404,{ok:false,error:'Товар не знайдено.'});return json(res,200,{ok:true,product:rowToProduct(result.rows[0])})}catch(error){return json(res,400,{ok:false,error:'Не вдалося змінити наявність.'})}
 }
+function normalizeHexColor(value, fallback) {
+  const v=clean(value,20)
+  return /^#[0-9a-fA-F]{6}$/.test(v)?v:fallback
+}
+function normalizeStoreSettings(body={}){
+  return {
+    storeName:clean(body.storeName,120)||'NordHome',
+    phone:clean(body.phone,60),email:clean(body.email,160),city:clean(body.city,120),instagram:clean(body.instagram,200),
+    lowStockThreshold:Math.max(0,Math.min(999,Math.round(Number(body.lowStockThreshold)||3))),
+    logoUrl:clean(body.logoUrl,500),heroEyebrow:clean(body.heroEyebrow,160),heroTitle:clean(body.heroTitle,220),heroText:clean(body.heroText,700),footerText:clean(body.footerText,300),aboutText:clean(body.aboutText,12000),
+    deliveryText:clean(body.deliveryText,12000),returnsText:clean(body.returnsText,12000),offerText:clean(body.offerText,20000),privacyText:clean(body.privacyText,20000),
+    seoHomeTitle:clean(body.seoHomeTitle,180),seoHomeDescription:clean(body.seoHomeDescription,320),publicUrl:clean(body.publicUrl,500),googleAnalyticsId:clean(body.googleAnalyticsId,40),metaPixelId:clean(body.metaPixelId,40),
+    primaryColor:normalizeHexColor(body.primaryColor,'#1d1f1c'),accentColor:normalizeHexColor(body.accentColor,'#2f7d55'),surfaceColor:normalizeHexColor(body.surfaceColor,'#f8f7f3'),
+    demoMode:Boolean(body.demoMode),demoBadge:clean(body.demoBadge,80)||'Демо-магазин'
+  }
+}
+async function saveStoreSettingsData(data){
+  await query(`INSERT INTO store_settings (id,data,updated_at) VALUES (1,$1::jsonb,NOW()) ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(data)])
+  return data
+}
+
 async function publicSettings(req,res){
   try{
     const result=await query(`SELECT data FROM store_settings WHERE id=1`)
     const data=result.rows[0]?.data||{}
-    return json(res,200,{ok:true,settings:{storeName:data.storeName||'NordHome',phone:data.phone||'',email:data.email||'',city:data.city||'Львів',instagram:data.instagram||'',lowStockThreshold:Number(data.lowStockThreshold)||3,logoUrl:data.logoUrl||'',heroEyebrow:data.heroEyebrow||'Меблі, створені для життя',heroTitle:data.heroTitle||'Сучасний комфорт у кожній деталі',heroText:data.heroText||'Колекція функціональних меблів у спокійному скандинавському стилі.',footerText:data.footerText||'Сучасні меблі для дому та офісу.',aboutText:data.aboutText||'',deliveryText:data.deliveryText||'',returnsText:data.returnsText||'',offerText:data.offerText||'',privacyText:data.privacyText||'',seoHomeTitle:data.seoHomeTitle||'',seoHomeDescription:data.seoHomeDescription||'',publicUrl:data.publicUrl||'',googleAnalyticsId:data.googleAnalyticsId||'',metaPixelId:data.metaPixelId||''}})
+    return json(res,200,{ok:true,settings:{storeName:data.storeName||'NordHome',phone:data.phone||'',email:data.email||'',city:data.city||'Львів',instagram:data.instagram||'',lowStockThreshold:Number(data.lowStockThreshold)||3,logoUrl:data.logoUrl||'',heroEyebrow:data.heroEyebrow||'Меблі, створені для життя',heroTitle:data.heroTitle||'Сучасний комфорт у кожній деталі',heroText:data.heroText||'Колекція функціональних меблів у спокійному скандинавському стилі.',footerText:data.footerText||'Сучасні меблі для дому та офісу.',aboutText:data.aboutText||'',deliveryText:data.deliveryText||'',returnsText:data.returnsText||'',offerText:data.offerText||'',privacyText:data.privacyText||'',seoHomeTitle:data.seoHomeTitle||'',seoHomeDescription:data.seoHomeDescription||'',publicUrl:data.publicUrl||'',googleAnalyticsId:data.googleAnalyticsId||'',metaPixelId:data.metaPixelId||'',primaryColor:data.primaryColor||'#1d1f1c',accentColor:data.accentColor||'#2f7d55',surfaceColor:data.surfaceColor||'#f8f7f3',demoMode:Boolean(data.demoMode),demoBadge:data.demoBadge||'Демо-магазин'}})
   }catch(error){return json(res,200,{ok:true,settings:{storeName:'NordHome',phone:'',email:'',city:'Львів',instagram:''}})}
 }
 
@@ -715,7 +736,7 @@ async function adminSettings(req,res){
 }
 async function adminSaveSettings(req,res){
   if(!requireAdmin(req,res))return
-  try{const body=await readJsonBody(req);const data={storeName:clean(body.storeName,120)||'NordHome',phone:clean(body.phone,60),email:clean(body.email,160),city:clean(body.city,120),instagram:clean(body.instagram,200),lowStockThreshold:Math.max(0,Math.min(999,Math.round(Number(body.lowStockThreshold)||3))),logoUrl:clean(body.logoUrl,500),heroEyebrow:clean(body.heroEyebrow,160),heroTitle:clean(body.heroTitle,220),heroText:clean(body.heroText,700),footerText:clean(body.footerText,300),aboutText:clean(body.aboutText,12000),deliveryText:clean(body.deliveryText,12000),returnsText:clean(body.returnsText,12000),offerText:clean(body.offerText,20000),privacyText:clean(body.privacyText,20000),seoHomeTitle:clean(body.seoHomeTitle,180),seoHomeDescription:clean(body.seoHomeDescription,320),publicUrl:clean(body.publicUrl,500),googleAnalyticsId:clean(body.googleAnalyticsId,40),metaPixelId:clean(body.metaPixelId,40)};await query(`INSERT INTO store_settings (id,data,updated_at) VALUES (1,$1::jsonb,NOW()) ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(data)]);return json(res,200,{ok:true,settings:data})}catch(error){return json(res,400,{ok:false,error:'Не вдалося зберегти налаштування.'})}
+  try{const body=await readJsonBody(req);const data=normalizeStoreSettings(body);await saveStoreSettingsData(data);return json(res,200,{ok:true,settings:data})}catch(error){return json(res,400,{ok:false,error:'Не вдалося зберегти налаштування.'})}
 }
 
 
@@ -755,6 +776,45 @@ async function serveSitemap(res){
   res.writeHead(200,{'Content-Type':'application/xml; charset=utf-8','Cache-Control':'public, max-age=300'});res.end(xml)
 }
 
+async function adminExportSettings(req,res){
+  if(!requireAdmin(req,res))return
+  try{const r=await query('SELECT data FROM store_settings WHERE id=1');return json(res,200,{ok:true,version:APP_VERSION,exportedAt:new Date().toISOString(),settings:r.rows[0]?.data||{}})}catch(e){return json(res,500,{ok:false,error:'Не вдалося експортувати налаштування.'})}
+}
+async function adminImportSettings(req,res){
+  if(!requireAdmin(req,res))return
+  try{const body=await readJsonBody(req,500_000);const source=body?.settings&&typeof body.settings==='object'?body.settings:body;if(!source||typeof source!=='object')return json(res,400,{ok:false,error:'Некоректний файл налаштувань.'});const current=(await query('SELECT data FROM store_settings WHERE id=1')).rows[0]?.data||{};const data=normalizeStoreSettings({...current,...source});await saveStoreSettingsData(data);return json(res,200,{ok:true,settings:data})}catch(e){return json(res,400,{ok:false,error:'Не вдалося імпортувати налаштування.'})}
+}
+async function adminSeedDemoData(req,res){
+  if(!requireAdmin(req,res))return
+  try{
+    const result=await withTransaction(async client=>{
+      const products=(await client.query(`SELECT id,name,price FROM products WHERE active=TRUE ORDER BY id LIMIT 3`)).rows
+      if(!products.length)throw new Error('Спочатку додайте хоча б один товар.')
+      const demos=[
+        {id:'DEMO-1001',first:'Олена',last:'Коваль',phone:'+380 67 111 22 33',pn:'380671112233',email:'demo1@nordhome.local',status:'new',carrier:'Нова пошта',deliveryStatus:'pending'},
+        {id:'DEMO-1002',first:'Андрій',last:'Мельник',phone:'+380 93 444 55 66',pn:'380934445566',email:'demo2@nordhome.local',status:'confirmed',carrier:'Нова пошта',deliveryStatus:'preparing'},
+        {id:'DEMO-1003',first:'Ірина',last:'Бондар',phone:'+380 50 777 88 99',pn:'380507778899',email:'demo3@nordhome.local',status:'shipped',carrier:'Укрпошта',deliveryStatus:'in_transit'}
+      ]
+      let createdOrders=0,createdCustomers=0
+      for(let i=0;i<demos.length;i++){
+        const d=demos[i], prod=products[i%products.length]
+        const cr=await client.query(`INSERT INTO customers(first_name,last_name,phone,phone_normalized,email,email_normalized,password_hash) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(phone_normalized) DO NOTHING RETURNING id`,[d.first,d.last,d.phone,d.pn,d.email,d.email,passwordHash(crypto.randomBytes(18).toString('hex'))]);if(cr.rowCount)createdCustomers++
+        const delivery={carrier:d.carrier,deliveryType:'Відділення',city:'Львів',point:'Демо-відділення №1'}
+        const total=Number(prod.price)||1000
+        const or=await client.query(`INSERT INTO orders(id,status,customer_first_name,customer_last_name,customer_phone,customer_email,delivery,payment,comment,total,subtotal,discount,promo_code,tracking_number,shipment_carrier,delivery_status,shipment_updated_at) VALUES($1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$10,0,'',$11,$12,$13,NOW()) ON CONFLICT(id) DO NOTHING RETURNING id`,[d.id,d.status,d.first,d.last,d.phone,d.email,JSON.stringify(delivery),'Післяплата','Демонстраційне замовлення',total,d.status==='shipped'?`204500000000${i+1}`:'',d.carrier,d.deliveryStatus])
+        if(or.rowCount){createdOrders++;await client.query(`INSERT INTO order_items(order_id,product_id,name,selected_color,price,quantity,stock_reserved,stock_applied) VALUES($1,$2,$3,'', $4,1,0,FALSE)`,[d.id,prod.id,prod.name,total])}
+      }
+      const r=await client.query('SELECT data FROM store_settings WHERE id=1');const current=r.rows[0]?.data||{};const next=normalizeStoreSettings({...current,demoMode:true});await client.query(`INSERT INTO store_settings(id,data,updated_at) VALUES(1,$1::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(next)])
+      return {createdOrders,createdCustomers,settings:next}
+    })
+    return json(res,200,{ok:true,...result})
+  }catch(e){return json(res,400,{ok:false,error:clean(e.message,220)||'Не вдалося створити демо-дані.'})}
+}
+async function adminClearDemoData(req,res){
+  if(!requireAdmin(req,res))return
+  try{const body=await readJsonBody(req);if(clean(body.confirmation,80)!=='CLEAR_DEMO_DATA')return json(res,400,{ok:false,error:'Для очищення введіть CLEAR_DEMO_DATA.'});const counts=await withTransaction(async client=>{const orders=await client.query('DELETE FROM orders RETURNING id');const customers=await client.query('DELETE FROM customers RETURNING id');const r=await client.query('SELECT data FROM store_settings WHERE id=1');const current=r.rows[0]?.data||{};const next=normalizeStoreSettings({...current,demoMode:false});await client.query(`INSERT INTO store_settings(id,data,updated_at) VALUES(1,$1::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(next)]);return {orders:orders.rowCount,customers:customers.rowCount,settings:next}});return json(res,200,{ok:true,cleared:counts})}catch(e){return json(res,400,{ok:false,error:'Не вдалося очистити дані.'})}
+}
+
 const server=http.createServer(async(req,res)=>{
  try {
   securityHeaders(res)
@@ -783,6 +843,10 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&url.pathname==='/api/admin/customers')return adminCustomers(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/reviews')return adminReviews(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/settings')return adminSettings(req,res)
+  if(req.method==='GET'&&url.pathname==='/api/admin/settings/export')return adminExportSettings(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/settings/import')return adminImportSettings(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/demo/seed')return adminSeedDemoData(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/demo/clear')return adminClearDemoData(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/promo-codes')return adminPromoCodes(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/promo-codes')return adminCreatePromo(req,res)
   if(req.method==='PUT'&&url.pathname==='/api/admin/settings')return adminSaveSettings(req,res)

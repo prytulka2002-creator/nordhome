@@ -555,3 +555,54 @@ img{max-width:100%}
 
 /* v3.23 catalog import/export */
 .admin-catalog-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}.admin-import-button{position:relative;cursor:pointer}.admin-import-button input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}.admin-import-note,.admin-import-report{margin:0 0 16px;padding:13px 15px;border:1px solid #ddd7cd;border-radius:12px;background:#faf8f4;font-size:13px;line-height:1.5}.admin-import-report{background:#f2f8f2;border-color:#cfe3cf}.admin-import-report details{margin-top:8px}.admin-import-report summary{cursor:pointer;font-weight:700}@media(max-width:900px){.admin-section-head{align-items:flex-start}.admin-catalog-actions{width:100%;justify-content:flex-start}.admin-catalog-actions button,.admin-catalog-actions label{flex:1 1 145px;justify-content:center}}
+
+
+/* NordHome v3.24 — fixed admin navigation + White Label */
+:root{--brand-primary:#1d1f1c;--brand-accent:#2f7d55;--brand-surface:#f8f7f3}
+body{background:var(--brand-surface)}
+.primary,.chips button.active{background:var(--brand-primary)!important;border-color:var(--brand-primary)!important}
+.cart-button span{background:var(--brand-primary)!important}
+.stock-ok,.availability-pill{color:var(--brand-accent)}
+.demo-site-badge{position:fixed;right:18px;bottom:18px;z-index:120;background:var(--brand-primary);color:#fff;padding:9px 13px;border-radius:999px;font-size:12px;font-weight:700;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+
+.admin-shell{display:block!important;min-height:100dvh}
+.admin-sidebar{position:fixed!important;left:0;top:0;bottom:0;width:240px;height:100dvh!important;z-index:100;display:flex;flex-direction:column;overflow:hidden}
+.admin-sidebar nav{min-height:0;overflow-y:auto;overflow-x:hidden}
+.admin-side-bottom{margin-top:auto!important;flex:0 0 auto}
+.admin-content{margin-left:240px;min-height:100dvh;padding:34px;overflow-x:hidden}
+.admin-mobile-toggle{display:none;border:0;background:transparent;color:#fff;width:40px;height:40px;border-radius:10px;place-items:center}
+.admin-mobile-head{display:block}
+.admin-color-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.admin-color-grid label{border:1px solid #e4e0d7;border-radius:14px;padding:12px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+.admin-color-grid label input{width:52px;height:38px;padding:2px;border-radius:9px;grid-row:1/3;grid-column:2}
+.admin-color-grid label span{font-size:11px;color:#777;font-weight:500}
+.demo-tools{display:flex;flex-wrap:wrap;gap:10px}
+.demo-tools .secondary,.demo-tools .danger,.file-button{display:inline-flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px}
+.file-button{cursor:pointer}.file-button input{display:none!important}
+.admin-success{background:#eaf7ee;color:#28653b;border:1px solid #cfe9d8;border-radius:12px;padding:11px 13px}
+
+.template-showcase{width:min(1180px,92%);margin:0 auto;padding:70px 0 90px}
+.template-showcase-hero{padding:64px;border-radius:28px;background:linear-gradient(135deg,var(--brand-primary),#343832);color:#fff}
+.template-showcase-hero h1{font-family:Fraunces,serif;font-size:clamp(38px,6vw,68px);line-height:1.02;max-width:900px;margin:12px 0 18px}.template-showcase-hero p{max-width:720px;font-size:18px;opacity:.86}.template-showcase-hero .secondary{background:#fff;color:#111}
+.template-feature-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:28px 0}.template-feature-grid article{background:#fff;border:1px solid #e7e2da;border-radius:20px;padding:24px}.template-feature-grid article>strong{color:var(--brand-accent);font-size:12px}.template-feature-grid h3{margin:8px 0}.template-feature-grid p{color:#666;margin:0;line-height:1.55}.template-cta{text-align:center;background:#fff;border:1px solid #e7e2da;border-radius:24px;padding:48px 24px}.template-cta h2{font-family:Fraunces,serif;font-size:38px;margin:0 0 10px}.template-cta p{color:#666;max-width:700px;margin:0 auto 22px}
+
+@media(max-width:1050px) and (min-width:761px){.admin-sidebar{width:205px}.admin-content{margin-left:205px;padding:24px}}
+@media(max-width:760px){
+  .admin-shell{padding-top:112px}
+  .admin-sidebar{position:fixed!important;left:0;right:0;top:0;bottom:auto;width:100%;height:112px!important;padding:8px 10px!important;display:grid;grid-template-columns:1fr auto;grid-template-rows:42px 54px;background:#171916;box-shadow:0 8px 25px rgba(0,0,0,.14)}
+  .admin-mobile-head{display:flex;align-items:center;gap:6px;grid-column:1/2;grid-row:1}
+  .admin-logo{font-size:18px!important;white-space:nowrap}.admin-sidebar>p{display:none}
+  .admin-mobile-toggle{display:grid}
+  .admin-side-bottom{grid-column:2;grid-row:1;display:flex!important;align-items:center;gap:4px;margin:0!important;overflow:visible!important}
+  .admin-side-bottom button{font-size:0!important;width:38px;height:38px;padding:0!important;display:grid!important;place-items:center}.admin-side-bottom button span{font-size:17px}.admin-side-bottom button svg{width:17px}
+  .admin-sidebar nav{grid-column:1/-1;grid-row:2;display:flex!important;gap:6px!important;overflow-x:auto!important;overflow-y:hidden!important;margin:0 -10px!important;padding:6px 10px 8px!important;white-space:nowrap;scrollbar-width:none}
+  .admin-sidebar nav button{display:flex!important;flex:0 0 auto!important;min-width:max-content!important;padding:8px 10px!important;font-size:11px!important}
+  .admin-content{margin-left:0!important;padding:14px 10px 28px!important;min-height:calc(100dvh - 112px)}
+  .admin-color-grid{grid-template-columns:1fr}.demo-tools{flex-direction:column}.demo-tools>*{width:100%;justify-content:center}
+  .template-showcase{padding:24px 0 70px}.template-showcase-hero{padding:28px 20px;border-radius:20px}.template-feature-grid{grid-template-columns:1fr}.template-showcase-hero h1{font-size:38px}.template-cta h2{font-size:30px}
+  .demo-site-badge{bottom:76px;right:10px;font-size:10px;padding:7px 10px}
+}
+.header{background:color-mix(in srgb,var(--brand-surface) 94%,transparent)!important}
+.cart-button,.menu-button{background:color-mix(in srgb,var(--brand-primary) 8%,var(--brand-surface))!important}
+.logo,.footer-logo{color:var(--brand-primary)}
+.footer{background:var(--brand-primary)!important}

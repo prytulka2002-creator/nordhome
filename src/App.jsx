@@ -955,6 +955,11 @@ function SeoManager({path,products,settings}){
   },[path,products,settings]);return null
 }
 
+function ThemeManager({settings}){
+  React.useEffect(()=>{const root=document.documentElement;root.style.setProperty('--brand-primary',settings.primaryColor||'#1d1f1c');root.style.setProperty('--brand-accent',settings.accentColor||'#2f7d55');root.style.setProperty('--brand-surface',settings.surfaceColor||'#f8f7f3')},[settings.primaryColor,settings.accentColor,settings.surfaceColor]);return null
+}
+function TemplateShowcasePage({navigate,settings}){const features=['Адаптивний дизайн для ПК і телефона','Каталог, пошук, фільтри та обране','Кошик і оформлення замовлення','Кабінет клієнта та історія замовлень','ТТН, перевізники й статуси доставки','Промокоди, залишки та відгуки','SEO, GA4 / Meta Pixel readiness','Імпорт / експорт товарів CSV та Excel','White Label: бренд, кольори й контакти','Повноцінна адміністративна панель'];return <main className="template-showcase"><section className="template-showcase-hero"><span className="eyebrow">NordHome White Label</span><h1>Готовий інтернет-магазин, який легко перетворити на ваш бренд</h1><p>Демонстраційна презентація можливостей шаблону {settings.storeName||'NordHome'}.</p><div className="hero-actions"><button className="primary" onClick={()=>navigate('/catalog')}>Переглянути магазин</button><button className="secondary" onClick={()=>navigate('/admin')}>Відкрити адмінку</button></div></section><section className="template-feature-grid">{features.map((x,i)=><article key={x}><strong>{String(i+1).padStart(2,'0')}</strong><h3>{x}</h3><p>Функція вже інтегрована в шаблон і керується без редагування основного коду.</p></article>)}</section><section className="template-cta"><h2>Один шаблон — різні магазини</h2><p>Змініть назву, логотип, контакти, кольори та каталог, після чого передайте готовий магазин клієнту.</p><button className="primary" onClick={()=>navigate('/admin')}>Налаштувати White Label</button></section></main>}
+
 function AnalyticsManager({settings}){
   React.useEffect(()=>{
     const ga=String(settings.googleAnalyticsId||'').trim(), pixel=String(settings.metaPixelId||'').trim();
@@ -974,7 +979,7 @@ export default function App(){
   const getPath=()=>window.location.pathname
   const [path,setPath]=React.useState(getPath)
   const [products,setProducts]=React.useState(DEFAULT_PRODUCTS)
-  const [settings,setSettings]=React.useState({storeName:'NordHome',phone:'',email:'',city:'Львів',instagram:'',lowStockThreshold:3,logoUrl:'',heroEyebrow:'',heroTitle:'',heroText:'',footerText:'',aboutText:'',seoHomeTitle:'',seoHomeDescription:'',publicUrl:'',googleAnalyticsId:'',metaPixelId:''})
+  const [settings,setSettings]=React.useState({storeName:'NordHome',phone:'',email:'',city:'Львів',instagram:'',lowStockThreshold:3,logoUrl:'',heroEyebrow:'',heroTitle:'',heroText:'',footerText:'',aboutText:'',seoHomeTitle:'',seoHomeDescription:'',publicUrl:'',googleAnalyticsId:'',metaPixelId:'',primaryColor:'#1d1f1c',accentColor:'#2f7d55',surfaceColor:'#f8f7f3',demoMode:false,demoBadge:'Демо-магазин'})
   const loadSettings=React.useCallback(async()=>{
     try{const response=await fetch('/api/settings',{cache:'no-store'});const data=await response.json();if(response.ok&&data.ok&&data.settings)setSettings(v=>({...v,...data.settings}))}catch{}
   },[])
@@ -1014,6 +1019,7 @@ export default function App(){
   else if(path==='/favorites') page=<FavoritesPage navigate={navigate} products={products} favorites={favorites} onToggleFavorite={toggleFavorite}/>
   else if(path==='/recent') page=<RecentPage navigate={navigate} products={products} recent={recent} favorites={favorites} onToggleFavorite={toggleFavorite} clearRecent={()=>setRecent([])}/>
   else if(path==='/account') page=<CustomerAccountPage navigate={navigate} onRepeatOrder={repeatOrder}/>
+  else if(path==='/template') page=<TemplateShowcasePage navigate={navigate} settings={settings}/>
   else if(path==='/admin') return <AdminPage navigate={navigate} onProductsChanged={loadProducts} onSettingsChanged={loadSettings}/>
   else if(path==='/about') page=<SimplePage title={`Про ${settings.storeName || 'NordHome'}`} text={settings.aboutText || `${settings.storeName || 'NordHome'} — інтернет-магазин сучасних товарів для дому та офісу.`} navigate={navigate}/>
   else if(path==='/delivery') page=<SimplePage title="Доставка та оплата" text={settings.deliveryText || `Доставка по Україні здійснюється доступними перевізниками. Вартість і строки залежать від населеного пункту, габаритів товару та обраного способу доставки. Доступні способи оплати відображаються під час оформлення замовлення. Деталі замовлення менеджер може уточнити після оформлення.`} navigate={navigate}/>
@@ -1022,5 +1028,5 @@ export default function App(){
   else if(path==='/privacy') page=<SimplePage title="Політика конфіденційності" text={settings.privacyText || `Ця сторінка описує правила обробки персональних даних покупців. Перед реальним запуском вкажіть, які дані збираються, для яких цілей використовуються, як зберігаються та як покупець може звернутися щодо своїх даних.`} navigate={navigate}/>
   else if(path==='/contacts') page=<SimplePage title="Контакти" text={`${settings.phone ? `Телефон: ${settings.phone}. ` : ''}${settings.email ? `Email: ${settings.email}. ` : ''}${settings.city || 'Львів'}, Україна.${settings.instagram ? ` Instagram: ${settings.instagram}` : ''}`} navigate={navigate}/>
   else page=<SimplePage title="Сторінку не знайдено" navigate={navigate}/>
-  return <><AnalyticsManager settings={settings}/><SeoManager path={path} products={products} settings={settings}/><Header navigate={navigate} cartCount={cartCount} favoriteCount={favorites.length} recentCount={recent.length} settings={settings}/>{page}<Footer navigate={navigate} settings={settings}/></>
+  return <><ThemeManager settings={settings}/><AnalyticsManager settings={settings}/><SeoManager path={path} products={products} settings={settings}/>{settings.demoMode&&<div className="demo-site-badge">{settings.demoBadge||'Демо-магазин'}</div>}<Header navigate={navigate} cartCount={cartCount} favoriteCount={favorites.length} recentCount={recent.length} settings={settings}/>{page}<Footer navigate={navigate} settings={settings}/></>
 }
