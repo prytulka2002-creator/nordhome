@@ -1,0 +1,8 @@
+NordHome v3.27 — Backup & Restore
+
+Адмінка → Налаштування → Повний Backup & Restore.
+Backup містить: товари, store_settings, промокоди, відгуки.
+Не містить: замовлення, клієнтів, паролі, токени, .env, ключі Supabase/Telegram/SMTP.
+Відновлення захищене кодом RESTORE_NORDHOME і виконується в транзакції.
+Фото в Supabase Storage не дублюються у JSON: backup зберігає їх URL.
+Міграція БД не потрібна.

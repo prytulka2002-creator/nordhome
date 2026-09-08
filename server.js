@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.26.0'
+const APP_VERSION = '3.27.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -822,6 +822,39 @@ async function adminImportSettings(req,res){
   if(!requireAdmin(req,res))return
   try{const body=await readJsonBody(req,500_000);const source=body?.settings&&typeof body.settings==='object'&&!Array.isArray(body.settings)?body.settings:body;if(!source||typeof source!=='object'||Array.isArray(source))return json(res,400,{ok:false,error:'Некоректний файл налаштувань.'});const current=(await query('SELECT data FROM store_settings WHERE id=1')).rows[0]?.data||{};const data=normalizeStoreSettings({...current,...source});await saveStoreSettingsData(data);return json(res,200,{ok:true,settings:data})}catch(e){return json(res,400,{ok:false,error:'Не вдалося імпортувати налаштування.'})}
 }
+async function adminExportBackup(req,res){
+  if(!requireAdmin(req,res))return
+  try{
+    const [products,settings,promos,reviews]=await Promise.all([
+      query('SELECT * FROM products ORDER BY id'),
+      query('SELECT data FROM store_settings WHERE id=1'),
+      query('SELECT * FROM promo_codes ORDER BY id'),
+      query('SELECT * FROM product_reviews ORDER BY id')
+    ])
+    return json(res,200,{ok:true,format:'nordhome-backup',version:APP_VERSION,exportedAt:new Date().toISOString(),data:{products:products.rows,settings:settings.rows[0]?.data||{},promoCodes:promos.rows,reviews:reviews.rows}})
+  }catch(e){console.error('Backup export failed:',e);return json(res,500,{ok:false,error:'Не вдалося створити резервну копію.'})}
+}
+async function adminImportBackup(req,res){
+  if(!requireAdmin(req,res))return
+  try{
+    const body=await readJsonBody(req,8_000_000)
+    if(body?.format!=='nordhome-backup'||!body.data||!Array.isArray(body.data.products)||!Array.isArray(body.data.promoCodes)||!Array.isArray(body.data.reviews))return json(res,400,{ok:false,error:'Це не файл резервної копії NordHome.'})
+    if(clean(body.confirmation,80)!=='RESTORE_NORDHOME')return json(res,400,{ok:false,error:'Для відновлення введіть RESTORE_NORDHOME.'})
+    const result=await withTransaction(async client=>{
+      await client.query('DELETE FROM product_reviews');await client.query('DELETE FROM promo_codes');await client.query('DELETE FROM products')
+      for(const x of body.data.products){
+        await client.query(`INSERT INTO products(id,name,price,category,image,short_description,description,dimensions,material,colors,availability,specs,gallery,active,created_at,updated_at,sku,stock,is_new,bestseller,sale_percent,old_price,availability_mode,slug,seo_title,seo_description) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11,$12::jsonb,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26)`,[x.id,x.name,x.price,x.category,x.image,x.short_description||'',x.description||'',x.dimensions||'',x.material||'',JSON.stringify(x.colors||[]),x.availability||'В наявності',JSON.stringify(x.specs||[]),JSON.stringify(x.gallery||[]),x.active!==false,x.created_at||new Date(),x.updated_at||new Date(),x.sku||'',Math.max(0,Number(x.stock)||0),Boolean(x.is_new),Boolean(x.bestseller),Math.max(0,Number(x.sale_percent)||0),Math.max(0,Number(x.old_price)||0),x.availability_mode||'auto',x.slug||`product-${x.id}`,x.seo_title||'',x.seo_description||''])
+      }
+      for(const x of body.data.promoCodes){await client.query(`INSERT INTO promo_codes(id,code,discount_type,discount_value,min_order,max_uses,active,starts_at,ends_at,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[x.id,x.code,x.discount_type,x.discount_value,x.min_order||0,x.max_uses||0,x.active!==false,x.starts_at||null,x.ends_at||null,x.created_at||new Date(),x.updated_at||new Date()])}
+      for(const x of body.data.reviews){if(body.data.products.some(p=>Number(p.id)===Number(x.product_id)))await client.query(`INSERT INTO product_reviews(id,product_id,customer_name,rating,review_text,status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`,[x.id,x.product_id,x.customer_name,x.rating,x.review_text,x.status||'pending',x.created_at||new Date(),x.updated_at||new Date()])}
+      const settings=normalizeStoreSettings(body.data.settings||{});await client.query(`INSERT INTO store_settings(id,data,updated_at) VALUES(1,$1::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(settings)])
+      await client.query(`SELECT setval(pg_get_serial_sequence('products','id'), COALESCE((SELECT MAX(id) FROM products),1), true)`);await client.query(`SELECT setval(pg_get_serial_sequence('promo_codes','id'), COALESCE((SELECT MAX(id) FROM promo_codes),1), true)`);await client.query(`SELECT setval(pg_get_serial_sequence('product_reviews','id'), COALESCE((SELECT MAX(id) FROM product_reviews),1), true)`)
+      return {products:body.data.products.length,promoCodes:body.data.promoCodes.length,reviews:body.data.reviews.length,settings}
+    })
+    return json(res,200,{ok:true,restored:result})
+  }catch(e){console.error('Backup restore failed:',e);return json(res,400,{ok:false,error:'Не вдалося відновити резервну копію. Дані не змінено.'})}
+}
+
 async function adminSeedDemoData(req,res){
   if(!requireAdmin(req,res))return
   try{
@@ -883,6 +916,8 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&url.pathname==='/api/admin/reviews')return adminReviews(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/settings')return adminSettings(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/settings/export')return adminExportSettings(req,res)
+  if(req.method==='GET'&&url.pathname==='/api/admin/backup/export')return adminExportBackup(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/backup/import')return adminImportBackup(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/settings/import')return adminImportSettings(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/demo/seed')return adminSeedDemoData(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/demo/clear')return adminClearDemoData(req,res)
