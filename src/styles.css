@@ -641,3 +641,13 @@ body{background:var(--brand-surface)}
 .client-handoff-page{display:grid;gap:18px}.handoff-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px}.handoff-hero h3{font-size:28px;margin:5px 0}.handoff-hero p{margin:0;color:#777}.handoff-hero-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end}.launch-readiness.standalone{background:#fff;border:1px solid #e4e0d7;border-radius:18px;padding:22px}.handoff-summary{padding:22px}.handoff-summary h3{margin-top:0}.handoff-summary p{margin-bottom:0;color:#666}
 @media(max-width:900px){.handoff-hero{align-items:flex-start;flex-direction:column}.handoff-hero-actions{justify-content:flex-start;width:100%}.handoff-hero-actions button{flex:1 1 210px}}
 @media(max-width:760px){.handoff-hero{padding:18px}.handoff-hero-actions{display:grid;grid-template-columns:1fr;width:100%}.handoff-hero-actions button{width:100%}}
+
+
+/* v3.29 one-click store auto preparation */
+.auto-prep-panel{padding:24px;display:grid;gap:18px;border:1px solid #d9ded6;background:linear-gradient(135deg,#fff 0%,#f6f8f3 100%)}
+.auto-prep-head{display:flex;align-items:center;justify-content:space-between;gap:24px}.auto-prep-head h3{font-size:24px;margin:4px 0 7px}.auto-prep-head p{max-width:760px;margin:0;color:#666;line-height:1.5}.auto-prep-head>button{white-space:nowrap}
+.auto-prep-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.auto-prep-grid>div{background:#fff;border:1px solid #e1ded5;border-radius:12px;padding:12px}.auto-prep-grid b,.auto-prep-grid span{display:block}.auto-prep-grid span{font-size:12px;color:#777;margin-top:3px}
+.auto-prep-warning{display:flex;align-items:flex-start;gap:9px;padding:12px 14px;border-radius:12px;background:#fff5e8;border:1px solid #f0d4aa;color:#6e5128;font-size:13px;line-height:1.45}.auto-prep-warning svg{flex:0 0 auto;margin-top:1px}
+.auto-prep-result{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px;border-radius:12px;background:#edf8f0;border:1px solid #cce7d3;font-size:13px}.auto-prep-result span{color:#4b5e50}
+@media(max-width:900px){.auto-prep-head{align-items:flex-start;flex-direction:column}.auto-prep-head>button{width:100%}.auto-prep-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.auto-prep-panel{padding:18px}.auto-prep-grid{grid-template-columns:1fr}}

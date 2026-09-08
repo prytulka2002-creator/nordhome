@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.28.1'
+const APP_VERSION = '3.29.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -815,6 +815,53 @@ async function serveSitemap(res){
 }
 
 
+async function adminAutoPrepare(req,res){
+  if(!requireAdmin(req,res))return
+  try{
+    const body=await readJsonBody(req,50_000)
+    const currentUrl=clean(body.currentUrl,500).replace(/\/$/,'')
+    const result=await withTransaction(async client=>{
+      const settingsR=await client.query('SELECT data FROM store_settings WHERE id=1')
+      const current=settingsR.rows[0]?.data||{}
+      const storeName=clean(current.storeName,120)||'NordHome'
+      const city=clean(current.city,120)||'Україна'
+      const validCurrentUrl=/^https:\/\//i.test(currentUrl)&&!currentUrl.includes('example.com')
+      const validSavedUrl=/^https:\/\//i.test(clean(current.publicUrl,500))&&!clean(current.publicUrl,500).includes('example.com')
+      const legalDefaults={
+        deliveryText:`Доставка та оплата — ${storeName}\n\nМи доставляємо замовлення по Україні доступними службами доставки, зазначеними під час оформлення. Вартість і строки доставки залежать від перевізника, населеного пункту, габаритів товару та обраного способу доставки.\n\nОплата здійснюється одним із способів, доступних під час оформлення замовлення. До підтвердження замовлення менеджер може уточнити деталі, наявність і строки відправлення.\n\nДля великогабаритних меблів умови підйому, занесення та складання погоджуються окремо. Контактні дані магазину вказані на сторінці «Контакти».`,
+        returnsText:`Повернення та обмін — ${storeName}\n\nПовернення та обмін товарів здійснюються відповідно до чинного законодавства України. Перед відправленням повернення зв’яжіться з магазином, щоб погодити спосіб і адресу відправлення.\n\nТовар має бути без слідів використання, у належному стані та з комплектністю, з якою був отриманий, якщо інше не передбачено законом. Для товарів, виготовлених або змінених під індивідуальне замовлення, можуть діяти окремі умови.\n\nЯкщо товар має пошкодження або невідповідність, зафіксуйте це під час отримання та одразу повідомте магазин. Контактні дані вказані на сторінці «Контакти».`,
+        offerText:`Публічна оферта — ${storeName}\n\nЦей текст визначає загальні умови оформлення замовлень у магазині ${storeName}. Оформлюючи замовлення, покупець підтверджує, що ознайомився з описом товару, ціною, умовами доставки, оплати та повернення.\n\nІнформація про товари на сайті, включно з фото, характеристиками, ціною та наявністю, може уточнюватися до моменту підтвердження замовлення менеджером. Остаточні умови замовлення погоджуються з покупцем під час підтвердження.\n\nРеквізити продавця, контактні дані та інша обов’язкова інформація мають бути вказані власником магазину перед комерційним запуском. Цей текст є стартовим шаблоном і потребує перевірки під конкретного продавця.`,
+        privacyText:`Політика конфіденційності — ${storeName}\n\nМагазин може отримувати дані, які покупець добровільно надає під час оформлення замовлення або звернення: ім’я, номер телефону, email, адресу чи дані доставки. Ці дані використовуються для обробки замовлення, комунікації з покупцем, доставки та підтримки.\n\nДані можуть передаватися службам доставки та іншим виконавцям лише в обсязі, необхідному для виконання замовлення. Магазин не повинен продавати персональні дані третім особам.\n\nСтроки зберігання, підстави обробки, контакти відповідальної особи та інші обов’язкові положення власник магазину має перевірити й адаптувати під свою діяльність перед запуском.`
+      }
+      const next=normalizeStoreSettings({
+        ...current,
+        publicUrl:validSavedUrl?current.publicUrl:(validCurrentUrl?currentUrl:current.publicUrl),
+        deliveryText:clean(current.deliveryText,12000)||legalDefaults.deliveryText,
+        returnsText:clean(current.returnsText,12000)||legalDefaults.returnsText,
+        offerText:clean(current.offerText,20000)||legalDefaults.offerText,
+        privacyText:clean(current.privacyText,20000)||legalDefaults.privacyText
+      })
+      await client.query(`INSERT INTO store_settings(id,data,updated_at) VALUES(1,$1::jsonb,NOW()) ON CONFLICT(id) DO UPDATE SET data=EXCLUDED.data,updated_at=NOW()`,[JSON.stringify(next)])
+      const productsR=await client.query('SELECT * FROM products ORDER BY id')
+      let skuGenerated=0,seoTitlesGenerated=0,seoDescriptionsGenerated=0,slugsGenerated=0
+      for(const x of productsR.rows){
+        let sku=clean(x.sku,80), seoTitle=clean(x.seo_title,180), seoDescription=clean(x.seo_description,320), slug=clean(x.slug,160)
+        if(!sku){sku=`NH-${String(x.id).padStart(4,'0')}`;skuGenerated++}
+        if(!slug){slug=slugify(x.name)||`product-${x.id}`;slugsGenerated++}
+        if(!seoTitle){seoTitle=clean(`${x.name} — ${storeName}`,180);seoTitlesGenerated++}
+        if(!seoDescription){
+          const source=clean(x.short_description,240)||clean(x.description,240)
+          seoDescription=clean(source||`Купити ${x.name} у ${storeName}. Актуальна ціна, характеристики, доставка по Україні.`,320)
+          seoDescriptionsGenerated++
+        }
+        await client.query('UPDATE products SET sku=$1,slug=$2,seo_title=$3,seo_description=$4,updated_at=NOW() WHERE id=$5',[sku,slug,seoTitle,seoDescription,x.id])
+      }
+      return {settings:next,products:productsR.rowCount,skuGenerated,seoTitlesGenerated,seoDescriptionsGenerated,slugsGenerated,legalAdded:['deliveryText','returnsText','offerText','privacyText'].filter(k=>!clean(current[k],20000)).length,urlUpdated:!validSavedUrl&&validCurrentUrl}
+    })
+    return json(res,200,{ok:true,...result,message:'Автопідготовку завершено. Реальні телефон, email і реквізити продавця потрібно перевірити вручну.'})
+  }catch(e){console.error('Auto prepare failed:',e);return json(res,400,{ok:false,error:'Не вдалося виконати автопідготовку магазину.'})}
+}
+
 async function adminLaunchReadiness(req,res){
   if(!requireAdmin(req,res))return
   try{
@@ -942,6 +989,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='GET'&&url.pathname==='/api/admin/reviews')return adminReviews(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/settings')return adminSettings(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/launch-readiness')return adminLaunchReadiness(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/auto-prepare')return adminAutoPrepare(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/settings/export')return adminExportSettings(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/backup/export')return adminExportBackup(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/backup/import')return adminImportBackup(req,res)
