@@ -633,3 +633,6 @@ body{background:var(--brand-surface)}
 .review-status.hidden{background:#eeeeee}
 .review-actions{flex-wrap:wrap}
 @media(max-width:760px){.reviews-table{min-width:880px}.review-text-cell{min-width:220px}}
+
+/* v3.28 Production & Client Handoff */
+.launch-tools{display:flex;gap:10px;flex-wrap:wrap}.launch-readiness{border:1px solid #dedbd2;border-radius:16px;padding:16px;background:#faf9f6}.launch-score{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}.launch-score strong{font-size:30px}.launch-score span{color:#666}.launch-check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.launch-check{padding:11px 12px;border-radius:12px;display:flex;flex-direction:column;gap:3px}.launch-check.ok{background:#edf8f0;border:1px solid #cce7d3}.launch-check.warn{background:#fff5e8;border:1px solid #f0d4aa}.launch-check span{font-size:12px;color:#666}@media(max-width:720px){.launch-check-grid{grid-template-columns:1fr}.launch-tools button{width:100%}}

@@ -1,0 +1,9 @@
+NordHome v3.28 — Production & Client Handoff
+
+- Production readiness checker in Admin → Settings
+- Checks DB, Supabase Storage, Telegram, public HTTPS URL, contacts, SEO, legal pages, catalog, images, SKU, product SEO and Demo Mode
+- Required checks determine whether store is ready for handoff
+- One-click current public URL
+- Downloadable client handoff checklist
+- Responsive readiness panel
+- No DB migration required
