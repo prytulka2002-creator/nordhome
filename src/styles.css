@@ -442,3 +442,108 @@ img{max-width:100%}
   .catalog-product-grid .product-card-body h3,.product-grid .product-card-body h3{font-size:13px}
   .catalog-product-grid .card-price-stack strong,.product-grid .card-price-stack strong{font-size:13px}
 }
+
+
+/* NordHome v3.20 — mobile polish for checkout/account/tracking/admin */
+@media (max-width:580px){
+  /* Public pages */
+  .cart-layout,.checkout,.tracking-layout,.account-grid{width:100%;min-width:0}
+  .cart-list,.cart-item,.cart-main,.summary,.form-card,.account-panel,.account-order-card,.tracking-card,.tracking-result{min-width:0;max-width:100%}
+  .cart-item{grid-template-columns:68px minmax(0,1fr) auto;align-items:start}
+  .cart-item img{width:68px;height:64px;border-radius:10px}
+  .cart-main{overflow:hidden}
+  .cart-main h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cart-main p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .summary{width:100%;padding:15px}
+  .summary>div{font-size:13px}
+  .summary .primary{width:100%;justify-content:center}
+
+  .checkout{gap:14px}
+  .form-card{padding:14px}
+  .checkout .form-card h3{font-size:18px;margin-top:20px}
+  .carrier-grid{grid-template-columns:1fr}
+  .carrier-card{width:100%}
+  .delivery-details{padding:12px}
+  .delivery-type-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .delivery-type{padding:9px 8px;font-size:11px;white-space:nowrap}
+  .np-point-picker,.settlement-picker{min-width:0;width:100%}
+  .np-point-picker input,.settlement-picker input{width:100%}
+  .promo-box{padding:12px}
+  .promo-row{display:grid;grid-template-columns:1fr auto;gap:7px}
+  .promo-row input{min-width:0}
+
+  .account-page{width:calc(100% - 24px)}
+  .account-head{gap:10px;align-items:flex-start}
+  .account-head h1{font-size:30px;line-height:1.1}
+  .account-head-actions{gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .account-tabs{display:flex;gap:6px;overflow-x:auto;margin-left:-12px;margin-right:-12px;padding:0 12px 8px;scrollbar-width:none}
+  .account-tabs::-webkit-scrollbar{display:none}
+  .account-tabs button{flex:0 0 auto;white-space:nowrap;padding:9px 12px;font-size:12px}
+  .account-grid{grid-template-columns:1fr!important;gap:12px}
+  .account-panel{padding:14px;border-radius:14px}
+  .account-section-head{gap:8px;align-items:flex-start}
+  .account-order-card{padding:12px;border-radius:14px}
+  .account-order-top,.account-order-bottom{gap:8px;align-items:flex-start}
+  .account-order-top{grid-template-columns:1fr auto}
+  .account-order-top>div{min-width:0}
+  .account-order-top strong,.account-order-top span{overflow-wrap:anywhere}
+  .account-order-items{gap:7px}
+  .account-order-items>div{grid-template-columns:46px minmax(0,1fr) auto;gap:8px}
+  .account-order-items img{width:46px;height:42px;object-fit:cover;border-radius:8px}
+  .account-benefits{grid-template-columns:1fr!important;gap:8px}
+  .account-form{grid-template-columns:1fr!important}
+
+  .tracking-layout{grid-template-columns:1fr!important;gap:12px}
+  .tracking-card,.tracking-result{padding:14px}
+  .tracking-form{display:grid;grid-template-columns:1fr;gap:8px}
+  .tracking-form input,.tracking-form button{width:100%}
+  .tracking-steps{overflow-x:auto;grid-template-columns:repeat(4,minmax(72px,1fr));padding-bottom:4px}
+  .tracking-items>div{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+
+  .reviews-layout{grid-template-columns:1fr;gap:14px}
+  .review-card,.review-form{padding:14px;border-radius:14px}
+  .review-card-head{align-items:flex-start}
+  .review-form{position:static}
+
+  /* mobile bottom spacing so controls are not glued to browser chrome */
+  main:not(.admin-shell){padding-bottom:max(8px,env(safe-area-inset-bottom))}
+}
+
+@media (max-width:760px){
+  /* Admin: make navigation and action areas usable on phones */
+  .admin-sidebar{background:#171916}
+  .admin-sidebar nav{scroll-snap-type:x proximity}
+  .admin-sidebar nav button{scroll-snap-align:start}
+  .admin-content{min-width:0;overflow:hidden}
+  .admin-section-head{width:100%}
+  .admin-kpi-grid,.admin-dashboard-grid,.admin-products-grid{min-width:0}
+  .admin-panel,.admin-kpi,.admin-product-card,.admin-settings-card,.admin-review-card{min-width:0;max-width:100%}
+  .admin-products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-product-card img{width:100%;aspect-ratio:4/3;object-fit:cover}
+  .admin-product-card h3{font-size:14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .admin-product-card p{font-size:11px}
+  .admin-product-actions button{width:100%}
+  .admin-table-wrap{width:100%;max-width:100%;overflow:auto}
+  .order-admin-summary{min-width:0}
+  .order-admin-summary>div:first-child{min-width:0}
+  .order-admin-summary strong,.order-admin-summary span{overflow-wrap:anywhere}
+  .admin-settings-card{grid-template-columns:1fr!important}
+  .admin-settings-card .full{grid-column:auto!important}
+  .admin-settings-card input,.admin-settings-card textarea,.admin-settings-card select{width:100%;min-width:0}
+  .admin-modal{overflow-x:hidden}
+  .product-edit-grid{min-width:0}
+  .product-edit-grid>*{min-width:0}
+  .admin-modal-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  .admin-modal-actions button{width:100%}
+}
+
+@media (max-width:480px){
+  .admin-products-grid{grid-template-columns:1fr}
+  .admin-sidebar{padding-top:max(10px,env(safe-area-inset-top))}
+  .admin-sidebar nav button{padding:9px 11px}
+  .admin-side-bottom{padding-bottom:2px}
+  .admin-kpi{min-height:76px}
+  .admin-table{min-width:540px}
+  .admin-review-actions{gap:8px}
+  .admin-review-actions button,.admin-review-actions select{min-height:42px}
+}
