@@ -13,6 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
+const APP_VERSION = '3.21.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -707,12 +708,13 @@ async function serveSitemap(res){
 }
 
 const server=http.createServer(async(req,res)=>{
+ try {
   securityHeaders(res)
   if (apiRateLimited(req,res)) return
   const url=new URL(req.url,'http://localhost')
   if(req.method==='GET'&&url.pathname==='/robots.txt')return serveRobots(res)
   if(req.method==='GET'&&url.pathname==='/sitemap.xml')return serveSitemap(res)
-  if(req.method==='GET'&&url.pathname==='/api/health'){try{await query('SELECT 1');return json(res,200,{ok:true,status:'healthy',database:'connected',version:'3.16.0',environment:IS_PRODUCTION?'production':'development'})}catch(error){return json(res,503,{ok:false,status:'unhealthy',database:'disconnected'})}}
+  if(req.method==='GET'&&url.pathname==='/api/health'){try{await query('SELECT 1');return json(res,200,{ok:true,status:'healthy',database:'connected',version:APP_VERSION,environment:IS_PRODUCTION?'production':'development'})}catch(error){return json(res,503,{ok:false,status:'unhealthy',database:'disconnected'})}}
   if(req.method==='GET'&&url.pathname==='/api/products')return json(res,200,{ok:true,products:await readProducts(false)})
   const publicReviewsMatch=url.pathname.match(/^\/api\/products\/(\d+)\/reviews$/);if(publicReviewsMatch&&req.method==='GET')return publicProductReviews(req,res,publicReviewsMatch[1]);if(publicReviewsMatch&&req.method==='POST')return createProductReview(req,res,publicReviewsMatch[1])
   if(req.method==='GET'&&url.pathname==='/api/settings')return publicSettings(req,res)
@@ -747,5 +749,18 @@ const server=http.createServer(async(req,res)=>{
   const productMatch=url.pathname.match(/^\/api\/admin\/products\/(\d+)$/);if(productMatch&&req.method==='PUT')return adminUpdateProduct(req,res,productMatch[1]);if(productMatch&&req.method==='DELETE')return adminDeleteProduct(req,res,productMatch[1])
   if(await serveStatic(req,res))return
   json(res,404,{ok:false,error:'Not found'})
+ } catch (error) {
+  console.error('Unhandled request error:', error)
+  if (!res.headersSent) return json(res,500,{ok:false,error:'Внутрішня помилка сервера.'})
+  try { res.end() } catch {}
+ }
 })
-server.listen(PORT,HOST,()=>console.log(`NordHome ${IS_PRODUCTION?'production':'development'} server listening on ${HOST}:${PORT}`))
+server.listen(PORT,HOST,()=>console.log(`NordHome v${APP_VERSION} ${IS_PRODUCTION?'production':'development'} server listening on ${HOST}:${PORT}`))
+
+function gracefulShutdown(signal) {
+  console.log(`${signal}: shutting down NordHome...`)
+  server.close(() => process.exit(0))
+  setTimeout(() => process.exit(1), 10000).unref()
+}
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))

@@ -1,0 +1,17 @@
+NordHome v3.21 — Launch Ready
+
+Що додано:
+- єдина версія сервера 3.21.0 у /api/health;
+- захист від необробленої помилки одного HTTP-запиту (сервер не має падати через один невдалий запит);
+- graceful shutdown для Render SIGTERM/SIGINT;
+- npm run launch:check — перевірка production ENV, PostgreSQL та публічних API;
+- збережено весь функціонал і responsive UI v3.20.
+
+Перед публічним запуском:
+1. npm install
+2. npm run build
+3. локально можна виконати npm run prod:check
+4. після deploy на Render виконайте launch:check у production shell, якщо shell доступний.
+5. Перевірте /api/health — version має бути 3.21.0.
+
+Email: SMTP може бути налаштований правильно, але конкретний хостинг може блокувати/таймаутити SMTP-з'єднання. Це не блокує створення замовлення.

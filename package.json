@@ -1,6 +1,6 @@
 {
   "name": "nordhome-react",
-  "version": "3.20.0",
+  "version": "3.21.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,8 @@
     "email:setup": "node setup-email.js",
     "admin:setup": "node setup-admin.js",
     "security:check": "node security-check.js",
-    "prod:check": "node production-check.js"
+    "prod:check": "node production-check.js",
+    "launch:check": "node launch-check.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
