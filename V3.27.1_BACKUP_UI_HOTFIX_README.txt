@@ -1,0 +1,5 @@
+NordHome v3.27.1 Backup UI Hotfix
+
+- Moves Full Backup & Restore to the very bottom of Admin > Settings, directly above Save.
+- Passes onProductsChanged into StoreSettings so restore can refresh product data.
+- No database migration required.
