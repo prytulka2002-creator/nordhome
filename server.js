@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.22.0'
+const APP_VERSION = '3.23.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -587,6 +587,34 @@ async function adminOrderShipment(req,res,id){
   }catch(error){console.error('Shipment update:',error);return json(res,400,{ok:false,error:clean(error.message,240)||'Не вдалося оновити доставку.'})}
 }
 
+async function adminBulkImportProducts(req,res){
+  if(!requireAdmin(req,res))return
+  try{
+    const body=await readJsonBody(req,2_500_000)
+    const rows=Array.isArray(body.products)?body.products:[]
+    if(!rows.length)return json(res,400,{ok:false,error:'Файл не містить товарів.'})
+    if(rows.length>1000)return json(res,400,{ok:false,error:'За один імпорт можна додати до 1000 товарів.'})
+    const report={created:0,updated:0,skipped:0,errors:[]}
+    await withTransaction(async client=>{
+      for(let i=0;i<rows.length;i++){
+        try{
+          const product=sanitizeProduct(rows[i],0)
+          let existing=null
+          if(product.sku) existing=(await client.query('SELECT * FROM products WHERE LOWER(sku)=LOWER($1) LIMIT 1',[product.sku])).rows[0]
+          if(existing){
+            await client.query(`UPDATE products SET name=$1,price=$2,category=$3,image=$4,short_description=$5,description=$6,dimensions=$7,material=$8,colors=$9::jsonb,availability=$10,availability_mode=$11,specs=$12::jsonb,gallery=$13::jsonb,active=$14,sku=$15,stock=$16,is_new=$17,bestseller=$18,sale_percent=$19,old_price=$20,slug=$21,seo_title=$22,seo_description=$23,updated_at=NOW() WHERE id=$24`,[product.name,product.price,product.category,product.image,product.shortDescription,product.description,product.dimensions,product.material,JSON.stringify(product.colors),product.availability,product.availabilityMode,JSON.stringify(product.specs),JSON.stringify(product.gallery),product.active,product.sku,product.stock,product.isNew,product.bestseller,product.salePercent,product.oldPrice,product.slug,product.seoTitle,product.seoDescription,existing.id])
+            report.updated++
+          }else{
+            await client.query(`INSERT INTO products (name,price,category,image,short_description,description,dimensions,material,colors,availability,availability_mode,specs,gallery,active,sku,stock,is_new,bestseller,sale_percent,old_price,slug,seo_title,seo_description) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10,$11,$12::jsonb,$13::jsonb,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)`,[product.name,product.price,product.category,product.image,product.shortDescription,product.description,product.dimensions,product.material,JSON.stringify(product.colors),product.availability,product.availabilityMode,JSON.stringify(product.specs),JSON.stringify(product.gallery),product.active,product.sku,product.stock,product.isNew,product.bestseller,product.salePercent,product.oldPrice,product.slug,product.seoTitle,product.seoDescription])
+            report.created++
+          }
+        }catch(error){report.skipped++;if(report.errors.length<30)report.errors.push(`Рядок ${i+2}: ${clean(error.message,180)}`)}
+      }
+    })
+    return json(res,200,{ok:true,...report,total:rows.length})
+  }catch(error){console.error('Bulk product import:',error);return json(res,400,{ok:false,error:clean(error.message,240)||'Не вдалося імпортувати товари.'})}
+}
+
 async function adminCreateProduct(req,res){
   if(!requireAdmin(req,res))return
   try{
@@ -760,6 +788,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='PUT'&&url.pathname==='/api/admin/settings')return adminSaveSettings(req,res)
   if(req.method==='GET'&&url.pathname==='/api/admin/products'){if(!requireAdmin(req,res))return;return json(res,200,{ok:true,products:await readProducts()})}
   if(req.method==='POST'&&url.pathname==='/api/admin/products')return adminCreateProduct(req,res)
+  if(req.method==='POST'&&url.pathname==='/api/admin/products/import')return adminBulkImportProducts(req,res)
   if(req.method==='POST'&&url.pathname==='/api/admin/upload-image')return adminUploadImage(req,res)
   const reviewMatch=url.pathname.match(/^\/api\/admin\/reviews\/(\d+)$/);if(reviewMatch&&req.method==='PATCH')return adminReviewStatus(req,res,reviewMatch[1]);if(reviewMatch&&req.method==='DELETE')return adminDeleteReview(req,res,reviewMatch[1])
   const promoMatch=url.pathname.match(/^\/api\/admin\/promo-codes\/(\d+)$/);if(promoMatch&&req.method==='PUT')return adminUpdatePromo(req,res,promoMatch[1]);if(promoMatch&&req.method==='DELETE')return adminDeletePromo(req,res,promoMatch[1])
