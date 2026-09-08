@@ -606,3 +606,10 @@ body{background:var(--brand-surface)}
 .cart-button,.menu-button{background:color-mix(in srgb,var(--brand-primary) 8%,var(--brand-surface))!important}
 .logo,.footer-logo{color:var(--brand-primary)}
 .footer{background:var(--brand-primary)!important}
+
+/* v3.24.2 settings import feedback */
+.settings-import-input{display:none!important}
+.transfer-status{margin-top:2px;padding:12px 14px;border-radius:12px;font-size:14px;font-weight:600}
+.transfer-status.loading{background:#f4f1e8;border:1px solid #ddd5c3;color:#5f5848}
+.transfer-status.success{background:#eaf7ee;border:1px solid #cfe9d8;color:#28653b}
+.transfer-status.error{background:#fff0ef;border:1px solid #f1c8c4;color:#a43a32}

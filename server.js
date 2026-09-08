@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.24.1'
+const APP_VERSION = '3.24.2'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -782,7 +782,7 @@ async function adminExportSettings(req,res){
 }
 async function adminImportSettings(req,res){
   if(!requireAdmin(req,res))return
-  try{const body=await readJsonBody(req,500_000);const source=body?.settings&&typeof body.settings==='object'?body.settings:body;if(!source||typeof source!=='object')return json(res,400,{ok:false,error:'Некоректний файл налаштувань.'});const current=(await query('SELECT data FROM store_settings WHERE id=1')).rows[0]?.data||{};const data=normalizeStoreSettings({...current,...source});await saveStoreSettingsData(data);return json(res,200,{ok:true,settings:data})}catch(e){return json(res,400,{ok:false,error:'Не вдалося імпортувати налаштування.'})}
+  try{const body=await readJsonBody(req,500_000);const source=body?.settings&&typeof body.settings==='object'&&!Array.isArray(body.settings)?body.settings:body;if(!source||typeof source!=='object'||Array.isArray(source))return json(res,400,{ok:false,error:'Некоректний файл налаштувань.'});const current=(await query('SELECT data FROM store_settings WHERE id=1')).rows[0]?.data||{};const data=normalizeStoreSettings({...current,...source});await saveStoreSettingsData(data);return json(res,200,{ok:true,settings:data})}catch(e){return json(res,400,{ok:false,error:'Не вдалося імпортувати налаштування.'})}
 }
 async function adminSeedDemoData(req,res){
   if(!requireAdmin(req,res))return
