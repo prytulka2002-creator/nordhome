@@ -1,0 +1,20 @@
+NordHome v3.30 — Sales & White Label Final
+
+Що нового:
+- White Label Studio прямо в Admin → Client Handoff.
+- Назва, слоган, логотип, favicon, телефон, email, місто, Instagram і 3 кольори в одному екрані.
+- Live preview бренду перед збереженням.
+- Favicon магазину керується налаштуванням без редагування коду.
+- «Пакет клієнта» генерує безпечний JSON handoff-файл: readiness, бренд, контакти, чекліст передачі. Секрети, .env, паролі та API-ключі не включаються.
+- Посилена сторінка /template: блок proof points для продажу готового рішення.
+- Версія server/package: 3.30.0.
+
+Міграція БД не потрібна: нові поля зберігаються у JSON store_settings.
+
+Після deploy:
+1) Admin → Client Handoff.
+2) Перевірити White Label Studio та зберегти бренд.
+3) Перевірити favicon (за наявності URL).
+4) Завантажити «Пакет клієнта».
+5) Відкрити /template і перевірити sales-презентацію.
+6) Зробити фінальний Backup.

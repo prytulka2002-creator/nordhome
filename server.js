@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.29.0'
+const APP_VERSION = '3.30.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -735,7 +735,7 @@ function normalizeStoreSettings(body={}){
     storeName:clean(body.storeName,120)||'NordHome',
     phone:clean(body.phone,60),email:clean(body.email,160),city:clean(body.city,120),instagram:clean(body.instagram,200),
     lowStockThreshold:Math.max(0,Math.min(999,Math.round(Number(body.lowStockThreshold)||3))),
-    logoUrl:clean(body.logoUrl,500),heroEyebrow:clean(body.heroEyebrow,160),heroTitle:clean(body.heroTitle,220),heroText:clean(body.heroText,700),footerText:clean(body.footerText,300),aboutText:clean(body.aboutText,12000),
+    logoUrl:clean(body.logoUrl,500),faviconUrl:clean(body.faviconUrl,500),brandTagline:clean(body.brandTagline,180),heroEyebrow:clean(body.heroEyebrow,160),heroTitle:clean(body.heroTitle,220),heroText:clean(body.heroText,700),footerText:clean(body.footerText,300),aboutText:clean(body.aboutText,12000),
     deliveryText:clean(body.deliveryText,12000),returnsText:clean(body.returnsText,12000),offerText:clean(body.offerText,20000),privacyText:clean(body.privacyText,20000),
     seoHomeTitle:clean(body.seoHomeTitle,180),seoHomeDescription:clean(body.seoHomeDescription,320),publicUrl:clean(body.publicUrl,500),googleAnalyticsId:clean(body.googleAnalyticsId,40),metaPixelId:clean(body.metaPixelId,40),
     primaryColor:normalizeHexColor(body.primaryColor,'#1d1f1c'),accentColor:normalizeHexColor(body.accentColor,'#2f7d55'),surfaceColor:normalizeHexColor(body.surfaceColor,'#f8f7f3'),
@@ -751,7 +751,7 @@ async function publicSettings(req,res){
   try{
     const result=await query(`SELECT data FROM store_settings WHERE id=1`)
     const data=result.rows[0]?.data||{}
-    return json(res,200,{ok:true,settings:{storeName:data.storeName||'NordHome',phone:data.phone||'',email:data.email||'',city:data.city||'Львів',instagram:data.instagram||'',lowStockThreshold:Number(data.lowStockThreshold)||3,logoUrl:data.logoUrl||'',heroEyebrow:data.heroEyebrow||'Меблі, створені для життя',heroTitle:data.heroTitle||'Сучасний комфорт у кожній деталі',heroText:data.heroText||'Колекція функціональних меблів у спокійному скандинавському стилі.',footerText:data.footerText||'Сучасні меблі для дому та офісу.',aboutText:data.aboutText||'',deliveryText:data.deliveryText||'',returnsText:data.returnsText||'',offerText:data.offerText||'',privacyText:data.privacyText||'',seoHomeTitle:data.seoHomeTitle||'',seoHomeDescription:data.seoHomeDescription||'',publicUrl:data.publicUrl||'',googleAnalyticsId:data.googleAnalyticsId||'',metaPixelId:data.metaPixelId||'',primaryColor:data.primaryColor||'#1d1f1c',accentColor:data.accentColor||'#2f7d55',surfaceColor:data.surfaceColor||'#f8f7f3',demoMode:Boolean(data.demoMode),demoBadge:data.demoBadge||'Демо-магазин',templateStarterPrice:data.templateStarterPrice||'від 12 000 ₴',templateBusinessPrice:data.templateBusinessPrice||'від 20 000 ₴',templateProPrice:data.templateProPrice||'від 30 000 ₴'}})
+    return json(res,200,{ok:true,settings:{storeName:data.storeName||'NordHome',phone:data.phone||'',email:data.email||'',city:data.city||'Львів',instagram:data.instagram||'',lowStockThreshold:Number(data.lowStockThreshold)||3,logoUrl:data.logoUrl||'',faviconUrl:data.faviconUrl||'',brandTagline:data.brandTagline||'',heroEyebrow:data.heroEyebrow||'Меблі, створені для життя',heroTitle:data.heroTitle||'Сучасний комфорт у кожній деталі',heroText:data.heroText||'Колекція функціональних меблів у спокійному скандинавському стилі.',footerText:data.footerText||'Сучасні меблі для дому та офісу.',aboutText:data.aboutText||'',deliveryText:data.deliveryText||'',returnsText:data.returnsText||'',offerText:data.offerText||'',privacyText:data.privacyText||'',seoHomeTitle:data.seoHomeTitle||'',seoHomeDescription:data.seoHomeDescription||'',publicUrl:data.publicUrl||'',googleAnalyticsId:data.googleAnalyticsId||'',metaPixelId:data.metaPixelId||'',primaryColor:data.primaryColor||'#1d1f1c',accentColor:data.accentColor||'#2f7d55',surfaceColor:data.surfaceColor||'#f8f7f3',demoMode:Boolean(data.demoMode),demoBadge:data.demoBadge||'Демо-магазин',templateStarterPrice:data.templateStarterPrice||'від 12 000 ₴',templateBusinessPrice:data.templateBusinessPrice||'від 20 000 ₴',templateProPrice:data.templateProPrice||'від 30 000 ₴'}})
   }catch(error){return json(res,200,{ok:true,settings:{storeName:'NordHome',phone:'',email:'',city:'Львів',instagram:''}})}
 }
 
