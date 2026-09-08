@@ -168,3 +168,13 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_title VARCHAR(180) NOT NULL DE
 ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_description VARCHAR(320) NOT NULL DEFAULT '';
 UPDATE products SET slug = 'product-' || id WHERE slug = '';
 CREATE UNIQUE INDEX IF NOT EXISTS products_slug_unique_idx ON products(slug);
+
+
+-- NordHome v3.22 advanced order fulfillment
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS tracking_number VARCHAR(120) NOT NULL DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipment_carrier VARCHAR(80) NOT NULL DEFAULT '';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_status VARCHAR(30) NOT NULL DEFAULT 'pending';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipment_updated_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS orders_tracking_number_idx ON orders(tracking_number);
+CREATE INDEX IF NOT EXISTS orders_shipment_carrier_idx ON orders(shipment_carrier);
+CREATE INDEX IF NOT EXISTS orders_delivery_status_idx ON orders(delivery_status);

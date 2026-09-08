@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.21.0'
+const APP_VERSION = '3.22.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -157,6 +157,10 @@ async function readOrders() {
     discount: Number(row.discount || 0),
     promoCode: row.promo_code || '',
     total: Number(row.total),
+    trackingNumber: row.tracking_number || '',
+    shipmentCarrier: row.shipment_carrier || row.delivery?.carrier || '',
+    deliveryStatus: row.delivery_status || 'pending',
+    shipmentUpdatedAt: row.shipment_updated_at ? new Date(row.shipment_updated_at).toISOString() : null,
   }))
 }
 
@@ -207,7 +211,7 @@ async function customerLogout(req,res){const t=customerBearer(req);if(t)await qu
 async function customerOrders(req,res){
   const c=await customerFromRequest(req);if(!c)return json(res,401,{ok:false,error:'Потрібен вхід.'})
   const r=await query(`SELECT o.*,COALESCE(json_agg(json_build_object('id',oi.product_id,'name',oi.name,'selectedColor',oi.selected_color,'price',oi.price,'quantity',oi.quantity) ORDER BY oi.id) FILTER(WHERE oi.id IS NOT NULL),'[]'::json) items FROM orders o LEFT JOIN order_items oi ON oi.order_id=o.id WHERE RIGHT(REGEXP_REPLACE(o.customer_phone,'\\D','','g'),12)=$1 OR ($2<>'' AND LOWER(o.customer_email)=$2) GROUP BY o.id ORDER BY o.created_at DESC`,[c.phone_normalized,c.email_normalized])
-  return json(res,200,{ok:true,orders:r.rows.map(row=>({id:row.id,status:row.status,createdAt:new Date(row.created_at).toISOString(),updatedAt:row.updated_at?new Date(row.updated_at).toISOString():null,delivery:row.delivery||{},total:Number(row.total||0),items:(row.items||[]).map(i=>({...i,id:Number(i.id),price:Number(i.price),quantity:Number(i.quantity)}))}))})
+  return json(res,200,{ok:true,orders:r.rows.map(row=>({id:row.id,status:row.status,createdAt:new Date(row.created_at).toISOString(),updatedAt:row.updated_at?new Date(row.updated_at).toISOString():null,delivery:row.delivery||{},total:Number(row.total||0),trackingNumber:row.tracking_number||'',shipmentCarrier:row.shipment_carrier||row.delivery?.carrier||'',deliveryStatus:row.delivery_status||'pending',shipmentUpdatedAt:row.shipment_updated_at?new Date(row.shipment_updated_at).toISOString():null,items:(row.items||[]).map(i=>({...i,id:Number(i.id),price:Number(i.price),quantity:Number(i.quantity)}))}))})
 }
 async function customerUpdateProfile(req,res){
   const c=await customerFromRequest(req);if(!c)return json(res,401,{ok:false,error:'Потрібен вхід.'})
@@ -231,7 +235,7 @@ async function trackOrder(req,res){
     const row=result.rows[0]
     if(!row||normalizePhone(row.customer_phone)!==phone)return json(res,404,{ok:false,error:'Замовлення з такими даними не знайдено.'})
     const items=Array.isArray(row.items)?row.items.map(i=>({...i,id:Number(i.id),price:Number(i.price),quantity:Number(i.quantity)})):[]
-    return json(res,200,{ok:true,order:{id:row.id,status:row.status,createdAt:new Date(row.created_at).toISOString(),updatedAt:row.updated_at?new Date(row.updated_at).toISOString():null,delivery:row.delivery||{},payment:row.payment||'',items,total:Number(row.total||0)}})
+    return json(res,200,{ok:true,order:{id:row.id,status:row.status,createdAt:new Date(row.created_at).toISOString(),updatedAt:row.updated_at?new Date(row.updated_at).toISOString():null,delivery:row.delivery||{},payment:row.payment||'',trackingNumber:row.tracking_number||'',shipmentCarrier:row.shipment_carrier||row.delivery?.carrier||'',deliveryStatus:row.delivery_status||'pending',shipmentUpdatedAt:row.shipment_updated_at?new Date(row.shipment_updated_at).toISOString():null,items,total:Number(row.total||0)}})
   }catch(error){console.error('Track order:',error.message);return json(res,500,{ok:false,error:'Не вдалося перевірити замовлення. Спробуйте ще раз.'})}
 }
 
@@ -567,6 +571,22 @@ async function adminOrderStatus(req,res,id){
   }catch(error){console.error(error);return json(res,400,{ok:false,error:clean(error.message,240)||'Не вдалося оновити статус.'})}
 }
 
+async function adminOrderShipment(req,res,id){
+  if(!requireAdmin(req,res))return
+  try{
+    const body=await readJsonBody(req)
+    const allowed=['pending','preparing','handed_over','in_transit','arrived','received','returned']
+    const deliveryStatus=clean(body.deliveryStatus,30)||'pending'
+    if(!allowed.includes(deliveryStatus))return json(res,400,{ok:false,error:'Некоректний статус доставки.'})
+    const trackingNumber=clean(body.trackingNumber,120)
+    const shipmentCarrier=clean(body.shipmentCarrier,80)
+    const result=await query(`UPDATE orders SET tracking_number=$1,shipment_carrier=$2,delivery_status=$3,shipment_updated_at=NOW(),updated_at=NOW() WHERE id=$4 RETURNING id`,[trackingNumber,shipmentCarrier,deliveryStatus,id])
+    if(!result.rowCount)return json(res,404,{ok:false,error:'Замовлення не знайдено.'})
+    const order=(await readOrders()).find(o=>o.id===id)
+    return json(res,200,{ok:true,order})
+  }catch(error){console.error('Shipment update:',error);return json(res,400,{ok:false,error:clean(error.message,240)||'Не вдалося оновити доставку.'})}
+}
+
 async function adminCreateProduct(req,res){
   if(!requireAdmin(req,res))return
   try{
@@ -743,6 +763,7 @@ const server=http.createServer(async(req,res)=>{
   if(req.method==='POST'&&url.pathname==='/api/admin/upload-image')return adminUploadImage(req,res)
   const reviewMatch=url.pathname.match(/^\/api\/admin\/reviews\/(\d+)$/);if(reviewMatch&&req.method==='PATCH')return adminReviewStatus(req,res,reviewMatch[1]);if(reviewMatch&&req.method==='DELETE')return adminDeleteReview(req,res,reviewMatch[1])
   const promoMatch=url.pathname.match(/^\/api\/admin\/promo-codes\/(\d+)$/);if(promoMatch&&req.method==='PUT')return adminUpdatePromo(req,res,promoMatch[1]);if(promoMatch&&req.method==='DELETE')return adminDeletePromo(req,res,promoMatch[1])
+  const shipmentMatch=url.pathname.match(/^\/api\/admin\/orders\/(.+)\/shipment$/);if(req.method==='PATCH'&&shipmentMatch)return adminOrderShipment(req,res,decodeURIComponent(shipmentMatch[1]))
   const orderMatch=url.pathname.match(/^\/api\/admin\/orders\/(.+)\/status$/);if(req.method==='PATCH'&&orderMatch)return adminOrderStatus(req,res,decodeURIComponent(orderMatch[1]))
   const stockMatch=url.pathname.match(/^\/api\/admin\/products\/(\d+)\/stock$/);if(stockMatch&&req.method==='PATCH')return adminUpdateStock(req,res,stockMatch[1])
   const availabilityMatch=url.pathname.match(/^\/api\/admin\/products\/(\d+)\/availability$/);if(availabilityMatch&&req.method==='PATCH')return adminUpdateAvailability(req,res,availabilityMatch[1])
