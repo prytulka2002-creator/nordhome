@@ -1,0 +1,8 @@
+NordHome v3.28.1 — Client Handoff tab
+
+- Client Handoff винесено в окремий пункт лівого меню адмінки.
+- Окрема сторінка показує readiness score та всі production checks.
+- Кнопка поточного URL тепер одразу зберігає адресу в налаштування.
+- Можна скачати handoff checklist окремо від Settings.
+- Посилання на /template доступне прямо з Handoff.
+- База даних не потребує міграції.

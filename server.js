@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.28.0'
+const APP_VERSION = '3.28.1'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
