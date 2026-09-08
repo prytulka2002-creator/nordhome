@@ -16,3 +16,7 @@ for (const [name, ok] of rows) console.log(`${ok ? 'OK ' : 'NO '} ${name}`)
 console.log(`\nПостійний конфіг: ${s.persistentEnvPath}`)
 console.log(`Локальний конфіг:  ${s.projectEnvPath}\n`)
 if (!s.database) process.exitCode = 2
+
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? 'OK' : 'NO')
+console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'OK' : 'NO')
+console.log('SUPABASE_STORAGE_BUCKET:', process.env.SUPABASE_STORAGE_BUCKET || 'product-images (default)')

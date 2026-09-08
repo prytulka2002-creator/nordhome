@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 const PORT = Number(process.env.PORT || 3001)
 const HOST = process.env.HOST || '0.0.0.0'
 const IS_PRODUCTION = process.env.NODE_ENV === 'production'
-const APP_VERSION = '3.25.2'
+const APP_VERSION = '3.26.0'
 const uploadsDir = path.join(__dirname, 'public', 'uploads')
 const distDir = path.join(__dirname, 'dist')
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin'
@@ -639,14 +639,39 @@ async function adminDeleteProduct(req,res,id){
   if(!result.rowCount)return json(res,404,{ok:false,error:'Товар не знайдено.'})
   return json(res,200,{ok:true})
 }
+const SUPABASE_URL = clean(process.env.SUPABASE_URL || '', 500).replace(/\/$/, '')
+const SUPABASE_SERVICE_ROLE_KEY = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()
+const SUPABASE_STORAGE_BUCKET = clean(process.env.SUPABASE_STORAGE_BUCKET || 'product-images', 80) || 'product-images'
+function storageConfigured(){return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)}
+async function ensureStorageBucket(){
+  const headers={apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,'Content-Type':'application/json'}
+  const check=await fetch(`${SUPABASE_URL}/storage/v1/bucket/${encodeURIComponent(SUPABASE_STORAGE_BUCKET)}`,{headers})
+  if(check.ok)return
+  if(check.status!==404)throw new Error(`storage_bucket_${check.status}`)
+  const create=await fetch(`${SUPABASE_URL}/storage/v1/bucket`,{method:'POST',headers,body:JSON.stringify({id:SUPABASE_STORAGE_BUCKET,name:SUPABASE_STORAGE_BUCKET,public:true,file_size_limit:8000000,allowed_mime_types:['image/jpeg','image/png','image/webp']})})
+  if(!create.ok && create.status!==409)throw new Error(`storage_create_${create.status}`)
+}
+async function uploadToSupabase(buffer,ext){
+  await ensureStorageBucket()
+  const name=`products/${new Date().toISOString().slice(0,10)}/${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`
+  const mime=ext==='jpg'?'image/jpeg':`image/${ext}`
+  const r=await fetch(`${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(SUPABASE_STORAGE_BUCKET)}/${name.split('/').map(encodeURIComponent).join('/')}`,{method:'POST',headers:{apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,'Content-Type':mime,'x-upsert':'false'},body:buffer})
+  if(!r.ok)throw new Error(`storage_upload_${r.status}`)
+  return `${SUPABASE_URL}/storage/v1/object/public/${encodeURIComponent(SUPABASE_STORAGE_BUCKET)}/${name.split('/').map(encodeURIComponent).join('/')}`
+}
 async function adminUploadImage(req,res){
   if(!requireAdmin(req,res))return
   try{
     const body=await readJsonBody(req,12_000_000), dataUrl=String(body.dataUrl||''), match=dataUrl.match(/^data:image\/(jpeg|jpg|png|webp);base64,(.+)$/s)
     if(!match)return json(res,400,{ok:false,error:'Підтримуються JPG, PNG або WEBP.'})
     const ext=match[1]==='jpeg'?'jpg':match[1], buffer=Buffer.from(match[2],'base64');if(buffer.length>8_000_000)return json(res,413,{ok:false,error:'Фото завелике. Максимум 8 МБ.'})
-    await fs.mkdir(uploadsDir,{recursive:true});const name=`${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;await fs.writeFile(path.join(uploadsDir,name),buffer);return json(res,201,{ok:true,url:`/uploads/${name}`})
-  }catch(error){return json(res,error.message==='too_large'?413:500,{ok:false,error:'Не вдалося завантажити фото.'})}
+    if(storageConfigured()){
+      const url=await uploadToSupabase(buffer,ext)
+      return json(res,201,{ok:true,url,storage:'supabase'})
+    }
+    if(IS_PRODUCTION)return json(res,503,{ok:false,error:'Постійне сховище фото не налаштоване. Додайте SUPABASE_URL і SUPABASE_SERVICE_ROLE_KEY у Render.'})
+    await fs.mkdir(uploadsDir,{recursive:true});const name=`${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;await fs.writeFile(path.join(uploadsDir,name),buffer);return json(res,201,{ok:true,url:`/uploads/${name}`,storage:'local'})
+  }catch(error){console.error('Image upload:',error);return json(res,error.message==='too_large'?413:500,{ok:false,error:'Не вдалося завантажити фото у постійне сховище.'})}
 }
 
 

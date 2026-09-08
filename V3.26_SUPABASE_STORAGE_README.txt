@@ -1,0 +1,17 @@
+NordHome v3.26 — Persistent Product Images
+
+Що змінилось:
+- Фото товарів у production завантажуються у Supabase Storage, а не на локальний диск Render.
+- Bucket product-images створюється автоматично при першому завантаженні (public, max 8 MB, JPG/PNG/WEBP).
+- У development без Storage налаштувань залишається локальний fallback /public/uploads.
+- У production локальний fallback навмисно вимкнений, щоб фото не зникали після redeploy.
+
+Render -> Environment: додайте
+SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<service_role secret key from Supabase>
+SUPABASE_STORAGE_BUCKET=product-images   (необов'язково)
+
+ВАЖЛИВО: service role key — секрет. Не вставляйте його у frontend, GitHub або повідомлення. Він використовується тільки server.js.
+
+Після зміни Environment зробіть redeploy і в Admin -> Товари завантажте тестове фото. URL фото має містити /storage/v1/object/public/product-images/.
+Старі зовнішні URL товарів продовжують працювати. Старі локальні /uploads/ автоматично не мігруються.
